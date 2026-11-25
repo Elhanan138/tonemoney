@@ -20,7 +20,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     try {
       const out = await generateReport(rec.messages, rec.stats, rec.answers);
       console.log(`[report] ${id} model=${out.model} read=${out.readMessages} droppedQuotes=${out.droppedQuotes}`, out.usage ?? "");
-      rec = { ...rec, report: out.report, reportStatus: "done", reportAt: Date.now(), cutoff: out.cutoff, readMessages: out.readMessages };
+      rec = { ...rec, report: out.report, reportStatus: "done", reportAt: Date.now(), cutoff: out.cutoff, readMessages: out.readMessages, reportCostUsd: out.usage?.costUsd };
       await updateChat(rec);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

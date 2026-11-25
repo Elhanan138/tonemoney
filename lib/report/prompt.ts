@@ -38,6 +38,8 @@ export function buildUserPrompt(p: {
   cutoff: number | null;
   readMessages: number;
   participants: string[];
+  /** stage-1 notes covering the WHOLE chat; when present, chatText is only the most recent excerpt */
+  notes?: string;
 }): string {
   const { answers, stats } = p;
   const lang = LANGS.find((l) => l.id === answers.lang)?.name ?? "Hebrew";
@@ -77,11 +79,16 @@ Write the report in: ${lang}
 ${JSON.stringify(compactStats)}
 </stats>
 
-<chat format="date-or-time|sender|text — date shown only when it changes; [תמונה ×3] = 3 photos" read_messages="${p.readMessages}"${
+${p.notes ? `<notes covering="the whole chat, all ${p.readMessages.toLocaleString("en-US")} messages, part by part, in order">
+${p.notes}
+</notes>
+
+` : ""}<chat format="date-or-time|sender|text — date shown only when it changes; [תמונה ×3] = 3 photos"${p.notes ? ' scope="most recent messages only, for voice and current state; the notes cover everything"' : ` read_messages="${p.readMessages}"`}${
     p.cutoff ? ` older_messages_excluded_before="${new Date(p.cutoff).toISOString().slice(0, 10)}"` : ""
   }>
 ${p.chatText}
 </chat>
+${p.notes ? "\nQuotes may come from the notes or the chat, but must be verbatim either way. Use the whole history, not just the recent part.\n" : ""}
 
 Write the receipt as JSON matching the schema:
 - title: the bottom line as a headline. One deadpan sentence that makes people tap the link, e.g. "A family dispatch center that happens to hand out love." It becomes the WhatsApp link preview.

@@ -26,6 +26,8 @@ export interface ChatRecord {
   paidAt: number | null;
   shareToken: string | null;
   stripeSessionId?: string;
+  /** what the LLM calls for this report cost, in USD */
+  reportCostUsd?: number;
 }
 
 export const newId = (bytes = 16) => crypto.randomBytes(bytes).toString("base64url");
