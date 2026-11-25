@@ -1,7 +1,7 @@
 "use client";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { unzipSync, strFromU8 } from "fflate";
+import { unzipSync, strFromU8, gzipSync, strToU8 } from "fflate";
 import { parseWhatsApp, applyNames } from "@/lib/chat/parse";
 import type { ChatMessage } from "@/lib/chat/types";
 import { BRAND } from "@/lib/brand";
@@ -153,13 +153,13 @@ export default function Setup() {
       for (const o of originals) finalNames[o] = (names[o] ?? o).trim() || o;
       const r = await fetch("/api/chats", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
+        headers: { "content-type": "application/gzip" },
+        body: gzipSync(strToU8(JSON.stringify({
           email,
           code: c,
           messages: renamed,
           answers: { relationship, source, names: finalNames, me, groupName, focus, spice, lang, email },
-        }),
+        }))),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "שגיאה");

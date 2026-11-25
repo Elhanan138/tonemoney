@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getChat, saveChat } from "@/lib/server/store";
+import { demoMode, getChat, updateChat } from "@/lib/server/store";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,7 +9,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const base = process.env.NEXT_PUBLIC_BASE_URL ?? new URL(req.url).origin;
 
   if (!process.env.STRIPE_SECRET_KEY) {
-    if (process.env.NODE_ENV === "production") return NextResponse.json({ error: "payments not configured" }, { status: 500 });
+    if (!demoMode()) return NextResponse.json({ error: "payments not configured" }, { status: 500 });
     return NextResponse.json({ url: `${base}/c/${id}?session_id=mock` });
   }
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -30,6 +30,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     success_url: `${base}/c/${id}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/c/${id}`,
   });
-  await saveChat({ ...rec, stripeSessionId: session.id });
+  await updateChat({ ...rec, stripeSessionId: session.id });
   return NextResponse.json({ url: session.url });
 }

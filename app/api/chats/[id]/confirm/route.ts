@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getChat, newId, saveChat } from "@/lib/server/store";
+import { demoMode, getChat, newId, updateChat } from "@/lib/server/store";
 
 /** Called on return from Checkout. Verifies payment with Stripe, then unlocks + mints the share token. */
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -12,13 +12,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   let paid = false;
   if (!process.env.STRIPE_SECRET_KEY) {
-    paid = process.env.NODE_ENV !== "production" && session_id === "mock";
+    paid = demoMode() && session_id === "mock";
   } else {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
     const s = await stripe.checkout.sessions.retrieve(session_id);
     paid = s.payment_status === "paid" && s.metadata?.chatId === id;
   }
   if (!paid) return NextResponse.json({ paid: false }, { status: 402 });
-  await saveChat({ ...rec, paid: true, paidAt: Date.now(), shareToken: newId(24) });
+  await updateChat({ ...rec, paid: true, paidAt: Date.now(), shareToken: newId(24) });
   return NextResponse.json({ paid: true });
 }
